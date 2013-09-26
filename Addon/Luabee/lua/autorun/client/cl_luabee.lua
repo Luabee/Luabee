@@ -1,4 +1,3 @@
-
 LUABEE.DragThink = function() end
 LUABEE.Config = {}
 LUABEE.ALL_CODE_BLOCKS = {}
@@ -503,68 +502,21 @@ hook.Add("Initialize", "LUABEE_INIT", function()
 	
 	print("--> LUABEE Initialized.")
 
-	function LUABEE.GetValidArgs(i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20) --20 is max. 
-		if i1 then
-			if i2 then
-				if i3 then
-					if i4 then
-						if i5 then
-							if i6 then
-								if i7 then
-									if i8 then
-										if i9 then
-											if i10 then
-												if i11 then
-													if i12 then
-														if i13 then
-															if i14 then
-																if i15 then
-																	if i16 then
-																		if i17 then
-																			if i18 then
-																				if i19 then
-																					if i20 then
-																						return i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20
-																					end
-																					return i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19
-																				end
-																				return i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18
-																			end
-																			return i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17
-																		end
-																		return i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16
-																	end
-																	return i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15
-																end
-																return i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14
-															end
-															return i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13
-														end
-														return i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12
-													end
-													return i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11
-												end
-												return i1,i2,i3,i4,i5,i6,i7,i8,i9,i10
-											end
-											return i1,i2,i3,i4,i5,i6,i7,i8,i9
-										end
-										return i1,i2,i3,i4,i5,i6,i7,i8
-									end
-									return i1,i2,i3,i4,i5,i6,i7
-								end
-								return i1,i2,i3,i4,i5,i6
-							end
-							return i1,i2,i3,i4,i5
-						end
-						return i1,i2,i3,i4
-					end
-					return i1,i2,i3
-				end
-				return i1, i2
+	// Shortened, made iterable - Josh 'Acecool' Moser
+	// I'm unsure of your intention with this function, but I did a test and it performed identically for me with no limit of vars.
+	function LUABEE.GetValidArgs( ... )
+		local _args = { };
+		local _input = { ... };
+
+		for i = 1, #_input do
+			if ( _input[ i ] ) then
+				table.insert( _args, _input[ i ] );
+			else
+				break;
 			end
-			return i1
 		end
-		return
+
+		return unpack( _args );
 	end
 end)
 
@@ -605,37 +557,12 @@ function LUABEE.JumpToCallHook()
 	pnl:JumpToPoint(x+w/2,y+h/2,true)
 end
 
-function string.Safe(text)
-	text = string.Replace(text,".","_")
-	text = string.Replace(text,"*","_")
-	text = string.Replace(text,"?","_")
-	text = string.Replace(text,"&","_")
-	text = string.Replace(text,"^","_")
-	text = string.Replace(text,"%","_")
-	text = string.Replace(text,"$","_")
-	text = string.Replace(text,"/","_")
-	text = string.Replace(text,[[\]],"_")
-	text = string.Replace(text,":","_")
-	text = string.Replace(text,";","_")
-	text = string.Replace(text,"<","_")
-	text = string.Replace(text,">","_")
-	--text = string.Replace(text," ","_")
-	text = string.Replace(text,"'","_")
-	text = string.Replace(text,[["]],"_")
-	text = string.Replace(text,"{","_")
-	text = string.Replace(text,"}","_")
-	text = string.Replace(text,"[","_")
-	text = string.Replace(text,"]","_")
-	text = string.Replace(text,"+","_")
-	text = string.Replace(text,"-","_")
-	text = string.Replace(text,"#","_")
-	text = string.Replace(text,"@","_")
-	text = string.Replace(text,"!","_")
-	text = string.Replace(text,"|","_")
-	text = string.Replace(text,"`","_")
-	text = string.Replace(text,",","_")
-	text = string.Replace(text,"~","_")
-	return text
+// Shortened - Josh 'Acecool' Moser
+// http://www.lua.org/pil/20.2.html
+// Caps = Inverse, so W strips all NON alpha-numeric
+function string.Safe( text )
+	text = string.gsub( text, "%W", "_" ); // gsub returns :: text, replacementsDone - print( gsub ) == "text	0"
+	return text;
 end
 
 function LUABEE.RunServer(c)
