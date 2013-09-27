@@ -615,7 +615,7 @@ function PANEL:Compile()
 	for k,v in ipairs(self:CompileChildren())do
 		s[k] = tostring(v)
 	end
-	local fin = string.format(self.m_CompileString, LUABEE.GetValidArgs(s[1],s[2],s[3],s[4],s[5],s[6],s[7],s[8],s[9],s[10],s[11],s[12],s[13],s[14],s[15],s[16],s[17],s[18],s[19],s[20]))
+	local fin = string.format(self.m_CompileString, LUABEE.GetValidArgs(s[1],s[2],s[3],s[4],s[5],s[6],s[7],s[8],s[9],s[10],s[11],s[12],s[13],s[14],s[15],s[16],s[17],s[18],s[19],s[20]) or "")
 	if !fin or fin=="" then
 		LUABEE.CompileLog("ERROR: A compile string was nil --> '"..fin.."'", 3)
 	end

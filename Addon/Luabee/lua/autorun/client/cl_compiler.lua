@@ -3,12 +3,12 @@ hook.Add("Initialize", "Luabee Compile Init", function()
 	
 	function LUABEE.CompileCurrentTab()
 		local tab = LUABEE.Tabs:GetActiveTab()
-		local name = "NO_NAME.lua"
-		for k, v in pairs( LUABEE.Tabs.Items ) do
-			if ( v.Tab != tab ) then continue end
-			name = v.Name
-		end
-		return LUABEE.CompilePanel(tab:GetPanel())
+		-- local name = "NO_NAME.lua"
+		-- for k, v in pairs( LUABEE.Tabs.Items ) do
+			-- if ( v.Tab != tab ) then continue end
+			-- name = v.Name
+		-- end
+		return LUABEE.CompilePanel(tab:GetPanel(), tab.CallHook)
 	end
 	
 	function LUABEE.CompilePanel(pnl, start, NoConsole)
@@ -37,7 +37,7 @@ hook.Add("Initialize", "Luabee Compile Init", function()
 LUABEE = LUABEE or {}
 LUABEE.Vars = LUABEE.Vars or {}
 /*----------------------------------Legal Notices:---------------------------------------
-LUABEE is copyrighted (©) Bob Blackmon; alias Bobbleheadbob.
+LUABEE is copyrighted (c) Bob Blackmon; alias Bobbleheadbob.
 All files created using LUABEE are property of their creators.
 LUABEE is open-source software. Feel free to modify, distribute, and reinvent.
 Do not sell LUABEE without permission. That's not cool.
@@ -54,8 +54,10 @@ CONTACT ME: http://steamcommunity.com/id/bobblackmon/ | http://facepunch.com/mem
 			end
 			return compile
 		else
-			print("--> LUABEE: <Error> Call hook is not linked to a code block.")
-			RunConsoleCommand("showconsole")
+			if not NoConsole then
+				Error("--> LUABEE: <Error> Call hook is not linked to a code block.\n")
+				RunConsoleCommand("showconsole")
+			end
 			return ""
 		end
 	end

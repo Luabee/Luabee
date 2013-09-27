@@ -1,8 +1,14 @@
 
 hook.Add("Initialize", "Luabee Config",function()
+	
+	if LUABEE.Config then return end
+	LUABEE.Config = {}
 
 	LUABEE.Config.Ruler = CreateClientConVar("luabee_ruler", 1, true, false)
 	LUABEE.Config.Debug = CreateClientConVar("luabee_debugmode", 0, true, false)
+	
+	LUABEE.Config.Luapad = {}
+	LUABEE.Config.Luapad.OpenAfterExport = CreateClientConVar("luabee_luapad_openafterexport", 0, true, false)
 	
 	--LUABEE.Config.HotkeySpeed = CreateClientConVar("luabee_key_speed", 1, true, false)
 	

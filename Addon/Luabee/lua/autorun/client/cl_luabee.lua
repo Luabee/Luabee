@@ -1,10 +1,6 @@
 LUABEE.DragThink = function() end
-LUABEE.Config = {}
 LUABEE.ALL_CODE_BLOCKS = {}
 LUABEE.ALL_IOS = {}
-LUABEE.Dropdowns = {}
-LUABEE.Dropdowns.Buttons = {}
-LUABEE.Dropdowns.Menus = {}
 
 hook.Add("Initialize", "LUABEE_INIT", function()
 	print("--> LUABEE Initializing...")
@@ -352,11 +348,12 @@ hook.Add("Initialize", "LUABEE_INIT", function()
 			end)
 		end
 	
+	LUABEE.TopDropdowns = vgui.Create("TopDropdowns", LUABEE.WINDOW)
 	
 	function LUABEE.AddTopDropdown(name,tbl)
 		
-		table.insert(LUABEE.Dropdowns.Buttons, name)
-		table.insert(LUABEE.Dropdowns.Menus, tbl)
+		table.insert(LUABEE.TopDropdowns.Buttons, name)
+		table.insert(LUABEE.TopDropdowns.Menus, tbl)
 	end
 	LUABEE.AddTopDropdown("File",{
 			{"New", function() 
@@ -442,6 +439,11 @@ hook.Add("Initialize", "LUABEE_INIT", function()
 			LUABEE.FunctionLookup:SetVisible(true)
 			LUABEE.FunctionLookup:MakePopup()
 		end},
+		{"Open Luapad...", function()
+			
+			LUABEE.OpenLuapad(LUABEE.CompilePanel(LUABEE.Tabs:GetActiveTab():GetPanel(), LUABEE.Tabs:GetActiveTab():GetPanel().CallHook, true))
+			--LUABEE.OpenLuapad(LUABEE.CompileCurrentTab())
+		end},
 		{"Jump to call hook", function() 
 			LUABEE.JumpToCallHook()
 		end},
@@ -467,6 +469,7 @@ hook.Add("Initialize", "LUABEE_INIT", function()
 || |TT| Fakerz: http://steamcommunity.com/id/perselaks/          ||
 || Sparkz: http://steamcommunity.com/id/UlrichDude/              ||
 || CDi-Fail: http://steamcommunity.com/profiles/76561198004263412||
+|| Acecool: http://steamcommunity.com/id/Acecool                 ||
 ||                                                               ||
 || Luabee was envisioned, designed, and developed by:            ||
 || Bobbleheadbob: http://steamcommunity.com/id/bobblackmon/      ||
@@ -480,9 +483,6 @@ hook.Add("Initialize", "LUABEE_INIT", function()
 	})
 
 	hook.Add("Think", "LUABEE.DragThink", LUABEE.DragThink)
-
-		
-	LUABEE.TopDropdowns = vgui.Create("TopDropdowns", LUABEE.WINDOW)
 	
 	function LUABEE.WINDOW:OnMousePressed(mc)
 		if LUABEE.TopDropdowns:GetActiveButton() then
@@ -571,16 +571,95 @@ function LUABEE.RunServer(c)
 	net.SendToServer()
 end
 
+function LUABEE.OpenLuapad(txt)
+	local lp_f = vgui.Create("DFrame")
+		lp_f:SetSize(ScrW()-400,ScrH()-400)
+		lp_f:Center()
+		lp_f:MakePopup()
+		lp_f:SetTitle("Luapad")
+		
+	local lp = vgui.Create("LuapadEditor",lp_f) --Create a Luapad.
+		lp:SetText(txt)
+		lp:SetSize(ScrW()-400-20,ScrH()-400-62)
+		lp:CenterHorizontal()
+		lp:AlignBottom(10)
+		lp_f.lp = lp
+	
+	local lpdd = vgui.Create("TopDropdowns", lp_f)
+		local function AddTopDropdown(name,tbl)
+			table.insert(lpdd.Buttons, name)
+			table.insert(lpdd.Menus, tbl)
+		end
+		
+		AddTopDropdown("File", {
+			{"Run...", function()
+				local c = table.concat(lp.Rows or {},"\n")
+				Derma_Query("Where do you want to run this?", "Run",
+				"Clientside", function()	
+					RunString(c)
+				end,
+				"Shared", function()
+					RunString(c)
+					LUABEE.RunServer(c)
+				end, 
+				"Serverside", function()
+					LUABEE.RunServer(c)
+				end,
+				"Cancel",function()
+				end)
+			end},
+			{"Save...", function()
+				local fb = vgui.Create("FileBrowser", lp_f)
+					fb:SetDirectory("Data/Luabee/Saved Files")
+					fb:SetPos(400,272)
+					fb:SetAction("Save", function(path,name)
+						LUABEE.SaveCompiledData(table.concat(lp.Rows or {},"\n"), path.."/"..name)
+					end)
+			end},
+			{"Open...", function()
+				local fb = vgui.Create("FileBrowser", lp_f)
+					fb:SetDirectory("Data/Luabee/Saved Files")
+					fb:SetPos(400,272)
+					fb:SetAction("Open", function(path,name)
+						print(path,name)
+						lp:SetText(file.Read(path.."/"..name, "GAME"))
+					end)
+			end},
+		})
+		lp_f.lpdd = lpdd
+		local OMP = function(mc,pnl)
+			if lpdd:GetActiveButton() then
+				local b = lpdd:GetActiveButton()
+				b:SetSelected(false)
+				b.mnu:Hide()
+				b:GetParent():SetToggled(false)
+			end
+		end
+		
+		lp_f.OnMousePressed = OMP
+		lp:AddHook("MousePressed", "CloseDropdowns", OMP)
+		
+	
+	return lp_f
+end
+
 function LUABEE.ExportThis()
+	local data = LUABEE.CompileCurrentTab()
 	if LUABEE.Tabs:GetActiveTab().ExportDir then
-		LUABEE.SaveCompiledData(LUABEE.CompileCurrentTab(), LUABEE.Tabs:GetActiveTab().ExportDir)
+		LUABEE.SaveCompiledData(data, LUABEE.Tabs:GetActiveTab().ExportDir)
+		if LUABEE.Config.Luapad.OpenAfterExport:GetBool() then
+			LUABEE.OpenLuapad(LUABEE.CompilePanel(LUABEE.Tabs:GetActiveTab():GetPanel(), LUABEE.Tabs:GetActiveTab():GetPanel().CallHook, true))
+		end
 	else
 		local fb = vgui.Create("FileBrowser", LUABEE.WINDOW)
 			fb:SetDirectory("Data/Luabee/Saved Files")
 			fb:Center()
 			fb:SetAction("Export", function(path,name)
-				LUABEE.SaveCompiledData(LUABEE.CompileCurrentTab(), path.."/"..name)
+				LUABEE.SaveCompiledData(data, path.."/"..name)
 				LUABEE.Tabs:GetActiveTab().ExportDir = path.."/"..name
+				if LUABEE.Config.Luapad.OpenAfterExport:GetBool() then
+					LUABEE.OpenLuapad(LUABEE.CompilePanel(LUABEE.Tabs:GetActiveTab():GetPanel(), LUABEE.Tabs:GetActiveTab():GetPanel().CallHook, true))
+				end
 			end)
 	end
 end

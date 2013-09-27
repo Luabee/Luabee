@@ -10,7 +10,7 @@ AccessorFunc(PANEL, "m_HistoryPoint", "HistoryPoint", FORCE_NUMBER)
 
 function PANEL:Init()
 
-	self:SetFocusTopLevel( true )
+	--self:SetFocusTopLevel( true )
 
 	-- self:SetCursor( "sizeall" )
 
