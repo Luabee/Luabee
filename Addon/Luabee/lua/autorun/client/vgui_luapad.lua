@@ -879,6 +879,7 @@ end)
 LuaPadEditor:AddHook("SetupKeys", "History", function(self)
 	self:SetupKey("Undo", "CTRL Z", self.DoUndo)
 	self:SetupKey("Redo", "CTRL SHIFT Z", self.DoRedo)
+	self:SetupKey("Old Redo", "CTRL Y", self.DoRedo)
 end)
 
 LuaPadEditor:AddHook("RightMouseMenu", "History", function(self, menu)

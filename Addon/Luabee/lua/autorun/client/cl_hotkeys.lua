@@ -5,7 +5,7 @@ hook.Add("Initialize", "Luabee Hotkeys Init", function()
 	function LUABEE.HotkeyThink()
 		if LUABEE.WINDOW:IsVisible() then
 			
-			if input.IsKeyDown(KEY_LCONTROL) then
+			if input.IsKeyDown(KEY_LCONTROL) or input.IsKeyDown(KEY_RCONTROL) then
 				if input.IsKeyDown(LUABEE.Config.Keymapping.Save:GetInt()) then
 					LUABEE.SaveThis()
 					LUABEE.DisableHotkeyThink(LUABEE.Config.Keymapping.Save:GetInt())
@@ -19,14 +19,25 @@ hook.Add("Initialize", "Luabee Hotkeys Init", function()
 					LUABEE.DisableHotkeyThink(LUABEE.Config.Keymapping.Close:GetInt())
 					
 				elseif input.IsKeyDown(LUABEE.Config.Keymapping.Undo:GetInt()) then
-					LUABEE.Undo()--Undefined.
+					LUABEE.Undo()
 					LUABEE.DisableHotkeyThink(LUABEE.Config.Keymapping.Undo:GetInt())
 					
 				elseif input.IsKeyDown(LUABEE.Config.Keymapping.Redo:GetInt()) then
-					LUABEE.Redo()--Undefined.
+					LUABEE.Redo()
 					LUABEE.DisableHotkeyThink(LUABEE.Config.Keymapping.Redo:GetInt())
 					
+				elseif input.IsKeyDown(LUABEE.Config.Keymapping.Goto:GetInt()) then
+					LUABEE.OpenJumpMenu()
+					LUABEE.DisableHotkeyThink(LUABEE.Config.Keymapping.Goto:GetInt())
+					
+				elseif input.IsKeyDown(LUABEE.Config.Keymapping.Search:GetInt()) then
+					LUABEE.FunctionLookup:SetVisible(true)
+					LUABEE.FunctionLookup:MakePopup()
+					LUABEE.DisableHotkeyThink(LUABEE.Config.Keymapping.Search:GetInt())
+					
 				end
+			else
+				
 			end
 			
 		end

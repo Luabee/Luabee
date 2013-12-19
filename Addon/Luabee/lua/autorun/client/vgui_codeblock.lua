@@ -8,7 +8,6 @@ AccessorFunc( PANEL, "m_Color", "Color" )
 AccessorFunc( PANEL, "m_DrawColor", "DrawColor" )
 AccessorFunc( PANEL, "m_HilightedColor", "HilightedColor" )
 AccessorFunc( PANEL, "m_Text", "Text", FORCE_STRING )
-AccessorFunc( PANEL, "m_IsUserDefined", "UserDefined", FORCE_BOOL )
 AccessorFunc( PANEL, "m_Dragging", "Dragging", FORCE_BOOL )
 AccessorFunc( PANEL, "m_DragOffset", "DragOffset" )
 AccessorFunc( PANEL, "m_TopButton", "TopButton" )
@@ -22,10 +21,7 @@ AccessorFunc( PANEL, "m_Constructor", "Constructor")
 AccessorFunc( PANEL, "m_CompileString", "CompileString", FORCE_STRING)
 AccessorFunc( PANEL, "m_CompileOrder", "CompileOrder")
 AccessorFunc( PANEL, "m_IsClass", "IsClass", FORCE_BOOL)
- 
-Z_POS = {}
-Z_POS.MAX = 0
-Z_POS.MIN = -1
+AccessorFunc( PANEL, "m_Expanding", "Expanding", FORCE_NUMBER)
 
 /*---------------------------------------------------------
 	Init
@@ -56,6 +52,8 @@ function PANEL:Init()
 	self:SetCursor("sizeall")
 	
 	self:SetActivated(false)
+	
+	self.m_Expanding = 0
 	
 	self.m_Constructor = {}
 	self.m_CompileOrder = {}
@@ -103,18 +101,27 @@ function PANEL:OpenInfo()
 		FuncName.Label = vgui.Create("DLabel", FuncName.Box)
 			FuncName.Label:SetFont("DermaLarge")
 	local Info = {}
-		Info.Box = vgui.Create("DPanel", info)
+		Info.Box = vgui.Create("DPanelList", info)
 			Info.Box.Paint = function(s)
 				draw.RoundedBox(4, 0, 0, s:GetWide(), s:GetTall(), Color(0,0,0,150))
 			end
 			Info.Box:SetSize(info:GetWide()/2,info:GetTall()/2)
 			Info.Box:Center()
-		Info.Text = vgui.Create("DLabel", Info.Box)
-			Info.Text:SetFont("HUDHintTextLarge")
+			Info.Box:SetPadding(10)
+			Info.Box:SetSpacing(10)
+			Info.Box:SetAutoSize(false)
+			Info.Box:SetNoSizing(false)
+			Info.Box:EnableVerticalScrollbar(true)
 		Info.Title = vgui.Create("DLabel", info)
 			Info.Title:SetFont("DermaLarge")
 			Info.Title:SetText("Description:")
 			Info.Title:SizeToContents()
+		Info.Wiki = vgui.Create("DButton", Info.Box)
+			Info.Wiki:SetText("View Wiki Page")
+			Info.Wiki:SetWide(100)
+			Info.Wiki:AlignBottom(10)
+			Info.Wiki:CenterHorizontal()
+			-- Info.Box:AddItem(Info.Wiki)
 			
 	local Returns = {}
 		Returns.Box = vgui.Create("DListView", info)
@@ -157,75 +164,75 @@ function PANEL:OpenInfo()
 				self:Duplicate(LUABEE.Tabs:GetActiveTab():GetPanel())
 				info:Close()
 			end
-		Buttons.Modify = vgui.Create("DButton", info)
-			Buttons.Modify:SetSize(info:GetWide()*(4/9), 60)
-			Buttons.Modify:SetFont("DermaLarge")
-			Buttons.Modify:SetText("Modify")
-			Buttons.Modify.DoClick = function()
-				self:Modify()
-				info:Close()
-			end
-	info.m_Function = self.m_CatalogTable
-	local f = self.m_CatalogTable
-	RealmLabel:SetText(f.realm)
+			
+	info.m_Function = table.Copy(self.m_CatalogTable)
+	local f = info.m_Function
+	
+	RealmLabel:SetText(f.realm or "")
 	RealmLabel:SizeToContents()
 	RealmLabel:AlignLeft(42+(RealmLabel:GetTall()/2))
 	RealmLabel:AlignTop(42+(RealmLabel:GetTall()/2))
-	CategoryLabel:SetText(f.category)
+	
+	CategoryLabel:SetText(f.category or "")
 	CategoryLabel:SizeToContents()
 	CategoryLabel:AlignRight(42+(CategoryLabel:GetTall()/2))
 	CategoryLabel:AlignTop(42+(CategoryLabel:GetTall()/2))
+	
 	FuncName.Label:SetText(f.name)
 	FuncName.Label:SizeToContents()
 	local w,h = FuncName.Label:GetSize()
+	
 	FuncName.Box:SetSize(w+10,h+10)
 	FuncName.Box:AlignTop(42-5)
 	FuncName.Box:CenterHorizontal()
 	x,y = FuncName.Box:GetPos()
 	FuncName.Label:Center()
 	FuncName.Box:SetPos(x-5,y)
-	Info.Text:SetText(f.desc)
-	Info.Text:SizeToContents()
-	Info.Text:SetPos(10,10)
+	
+	if !f.wiki then
+		Info.Text = vgui.Create("DLabel", Info.Box)
+			Info.Text:SetFont("HUDHintTextLarge")
+			Info.Box:AddItem(Info.Text)
+			Info.Text:SetText(f.desc)
+			Info.Text:SizeToContents()
+			Info.Text:SetPos(10,10)
+	else
+		Info.HTML = vgui.Create("HTML", info)
+			Info.HTML:OpenURL(f.wiki)
+			Info.HTML:SetSize(info:GetWide()-2,info:GetTall()-24-90)
+			Info.HTML:SetPos(1, 23)
+	end
+	
 	x,y = Info.Box:GetPos()
+	
 	Info.Title:SetPos(x,y-5-Info.Title:GetTall())
+	
 	for k,v in ipairs(f.returns)do
 		Returns.Box:AddLine(k,v)
 	end
+	
 	for k,v in ipairs(f.args)do
 		Args.Box:AddLine(k,v)
 	end
-	if f.userdefined then
-		Buttons.Place:AlignBottom(15)
-		Buttons.Place:CenterHorizontal()
-		x,y = Buttons.Place:GetPos()
-		w = Buttons.Place:GetWide()
-		Buttons.Place:SetPos(x-(w/2)-10, y)
-		Buttons.Place:AlignBottom(15)
-		Buttons.Modify:CenterHorizontal()
-		x,y = Buttons.Modify:GetPos()
-		w = Buttons.Modify:GetWide()
-		Buttons.Modify:SetPos(x+(w/2)+10, y)
-		Buttons.Modify:SetVisible(true)
-	else
-		Buttons.Place:CenterHorizontal()
-		Buttons.Place:AlignBottom(15)
-		Buttons.Modify:SetVisible(false)
-		if f.callhook then
-			Buttons.Place:SetVisible(false)
+	
+	Buttons.Place:CenterHorizontal()
+	Buttons.Place:AlignBottom(15)
+	if f.callhook then
+		Buttons.Place:SetVisible(false)
+	end
+	
+	Info.Wiki.DoClick = function(btn)
+		local s
+		if _G[f.name] then
+			s = "Global/"..f.name
+		else
+			s = string.Replace(f.name, ".", "/")
+			s = string.Replace(s, ":", "/")
 		end
+		gui.OpenURL(string.format("http://wiki.garrysmod.com/page/%s", s))
 	end
 	
 	info:MakePopup()
-end
-
-function PANEL:OnLinked(button)
-end
-function PANEL:OnLinkRemoved(button)
-end
-
-function PANEL:Modify()--Only call if this is a user-defined function.
-	
 end
 
 function PANEL:ChainDuplicate()
@@ -257,16 +264,16 @@ function PANEL:Duplicate(parent)
 		block[k]=v
 	end
 	
-	block.m_Constructor = self.m_Constructor
-	block.m_CatalogTable = self.m_CatalogTable
+	block.m_Constructor = table.Copy(self.m_Constructor)
+	block.m_CatalogTable = table.Copy(self.m_CatalogTable)
 	
 	block:SetColor(self:GetColor())
 	block:SetPos(gui.MousePos())
 	block:SetFunction(self:GetFunction())
-	block:SetOutputs(self:GetOutputs())
-	block:SetInputs(self:GetInputs())
+	block:SetOutputs(table.Copy(self:GetOutputs()))
+	block:SetInputs(table.Copy(self:GetInputs()))
+	block:SetExpanding(self:GetExpanding())
 	block:SetText(self:GetText())
-	block:SetUserDefined(self:GetUserDefined())
 	block:Activate()
 	
 	for k,v in pairs(self:GetChildren())do
@@ -307,6 +314,24 @@ function PANEL:ClearAllLinks()
 		self.m_BottomButton:ClearInputs()
 		self.m_BottomButton:ClearOutputs()
 	end
+	
+	if ((self.m_Expanding > 0 ) and (self.m_Activated)) then
+		self:SetInputs(table.Copy(self.m_CatalogTable.args))
+		for k,v in ipairs(self.m_InputButtons)do
+			if k > self.m_Expanding then
+				v:Remove()
+				table.remove(self.m_InputButtons, k)
+			end
+		end
+		for k,v in ipairs(self.m_Inputs)do
+			if k > self.m_Expanding then
+				v = nil
+				table.remove(self.m_Inputs, k)
+			end
+		end
+		self:PerformLayout()
+	end
+	
 end
 
 function PANEL:OnMousePressed(mc)
@@ -331,29 +356,11 @@ function PANEL:OnMousePressed(mc)
 				b:GetParent():SetToggled(false)
 			end
 		else
-			if not self:GetDragging() then
-				local dmenu = DermaMenu()
-				dmenu:AddOption("Run", function() self:NewRun() end)
-				if not self:GetCallHook() then
-					dmenu:AddSpacer()
-					dmenu:AddOption("Duplicate", function() self:Duplicate(self:GetParent()) end)
-					dmenu:AddOption("Chain Duplicate", function() self:ChainDuplicate(self:GetParent()) end)
-					dmenu:AddSpacer()
-				end
-				if self:GetUserDefined() then
-					dmenu:AddOption("Modify", function() self:Modify() end)
-				end
-				if not self:GetCallHook() then
-					dmenu:AddSpacer()
-					dmenu:AddOption("Delete", function() self:Delete() end)
-					dmenu:AddOption("Chain Delete", function() self:ChainDelete() end)
-					dmenu:AddSpacer()
-				end
-				dmenu:AddSpacer()
-				dmenu:AddOption("About", function() self:OpenInfo() end)
-				dmenu:AddSpacer()
-				dmenu:AddOption("Cancel", function() end)
-				dmenu:Open()
+			if input.IsMouseDown(MOUSE_LEFT) then
+				LUABEE.AddHistoryPoint()
+				
+				self:MouseCapture(true)
+				self:ChainDrag()
 			end
 		end
 	else
@@ -363,10 +370,6 @@ function PANEL:OnMousePressed(mc)
 			new:StartDragging()
 		else
 			local dmenu = DermaMenu()
-			if self:GetUserDefined() then
-				dmenu:AddOption("Modify", function() self:Modify() end)
-			end
-			dmenu:AddSpacer()
 			dmenu:AddOption("About", function() self:OpenInfo() end)
 			dmenu:AddSpacer()
 			dmenu:AddOption("Cancel", function() end)
@@ -375,16 +378,44 @@ function PANEL:OnMousePressed(mc)
 	end
 end
 
-function PANEL:OnMouseReleased()
-	if self:GetActivated() then
-		self:SetParent(LUABEE.Tabs:GetActiveTab():GetPanel())
-		local ox,oy = self:GetDragOffset()[1] or 0, self:GetDragOffset()[2] or 0
-		local mx,my = self:GetParent():ScreenToLocal(gui.MousePos())
-		self:SetPos(mx-ox,my-oy)
-		
-		self:StopDragging()
-		if self:GetParent().StopDragging then
-			self:GetParent():StopDragging()
+function PANEL:OnMouseReleased(mc)
+	if mc == MOUSE_LEFT then
+		if self.m_Dragging then
+			if self:GetActivated() then
+				self:SetParent(LUABEE.Tabs:GetActiveTab():GetPanel())
+				local ox,oy = self:GetDragOffset()[1] or 0, self:GetDragOffset()[2] or 0
+				local mx,my = self:GetParent():ScreenToLocal(gui.MousePos())
+				self:SetPos(mx-ox,my-oy)
+				
+				self:StopChainDrag(self)
+				if self:GetParent().StopDragging then
+					self:GetParent():StopDragging()
+				end
+			end
+		end
+	else
+		if input.IsMouseDown(MOUSE_LEFT) then
+			self:StopChainDrag()
+			self:StartDragging()
+		end
+		if not self:GetDragging() then
+			local dmenu = DermaMenu()
+			dmenu:AddOption("Run", function() self:NewRun() end)
+			if not self:GetCallHook() then
+				dmenu:AddSpacer()
+				dmenu:AddOption("Duplicate", function() self:Duplicate(self:GetParent()) end)
+				dmenu:AddOption("Chain Duplicate", function() self:ChainDuplicate(self:GetParent()) end)
+			end
+			if not self:GetCallHook() then
+				dmenu:AddSpacer()
+				dmenu:AddOption("Delete", function() self:Delete() end)
+				dmenu:AddOption("Chain Delete", function() self:ChainDelete() end)
+			end
+			dmenu:AddSpacer()
+			dmenu:AddOption("About", function() self:OpenInfo() end)
+			dmenu:AddSpacer()
+			dmenu:AddOption("Cancel", function() end)
+			dmenu:Open()
 		end
 	end
 end
@@ -405,6 +436,72 @@ function PANEL:Think()
 	
 end
 
+
+function PANEL:OnLinked(button)
+	local e
+	if not button then return end
+	if not button:GetParent() == self then return end
+	if (not ((self:GetExpanding() or 0) > 0)) or (not self.m_Activated) then return else e = self:GetExpanding() end
+	if button == self:GetInputButtons()[e-1] then return end
+	if button:GetType() == LUABEE_INPUT then
+		if button:GetParent() == self then
+			if #self:GetInputs() < 20 then
+				table.insert(self:GetInputs(), self.m_CatalogTable.args[e])--maybe table.Copy?
+				self:UpdateSize()
+				self:PerformLayout()
+				
+				
+				local outputs = self.m_OutputButtons
+				local num = #outputs
+				local x2,y2
+				local w,h = self:GetSize()
+				local max = (20*num)+(20*math.max(num-1,0))
+				for i,b in ipairs(outputs)do
+					x2,y2 = 0, (20*i)+(20*math.max(i-1,0))+((h-max)/2)-20
+					b:SetPos(x2,y2)
+				end
+				
+				num = #self:GetInputs()
+				max = (20*num)+(20*math.max(num-1,0))
+				x2,y2 = w-20, (20*num)+(20*math.max(num-1,0))+((h-max)/2)-20
+				local pnl = vgui.Create("BlockButton", self)
+				pnl:SetType(LUABEE_INPUT)
+				pnl:SetPos(x2,y2)
+				
+				table.insert(self:GetInputButtons(), pnl)
+			end
+		end
+	end
+end
+
+function PANEL:OnLinkRemoved(button)
+	local e = self:GetExpanding() or 0
+	-- if not button then return end
+	if (e == 0) then return end
+	if not button then return end
+	if button:GetType() != LUABEE_INPUT then return end
+	if table.KeyFromValue(self.m_InputButtons, button) < e then return end
+	if (table.KeyFromValue(self.m_InputButtons, button) == e) and (#self.m_InputButtons <= e) then return end
+	
+	if button:GetParent() == self then
+		table.remove(self:GetInputs(), #self:GetInputs())
+		self:PerformLayout()
+		
+		local outputs = self.m_OutputButtons
+		local num = #outputs
+		local x2,y2
+		local w,h = self:GetSize()
+		local max = (20*num)+(20*math.max(num-1,0))
+		for i,b in ipairs(outputs)do
+			x2,y2 = 0, (20*i)+(20*math.max(i-1,0))+((h-max)/2)-20
+			b:SetPos(x2,y2)
+		end
+			
+		self:GetInputButtons()[#self:GetInputButtons()]:Remove()
+		table.remove(self:GetInputButtons(), #self:GetInputButtons())
+	end
+end
+
 function PANEL:StartDragging(t)
 	self.m_Dragging = true
 	self:MouseCapture(true)
@@ -421,6 +518,77 @@ function PANEL:StopDragging()
 	self.m_Dragging = false
 	self:MouseCapture(false)
 end
+
+function PANEL:ChainDrag()
+	self.m_Dragging = true
+	local mx,my = self:ScreenToLocal(gui.MousePos())
+	self:SetDragOffset({mx,my})
+	for k,v in pairs(self.m_InputButtons)do
+		if v:GetInputter() then
+			v:GetInputter():GetParent():ChainDrag()
+		end
+	end
+	if self.m_BottomButton then
+		if self.m_BottomButton:GetInputter() then
+			self.m_BottomButton:GetInputter():GetParent():ChainDrag()
+		end
+	end
+	if self.m_IfButton then
+		if self.m_IfButton:GetInputter() then
+			self.m_IfButton:GetInputter():GetParent():ChainDrag()
+		end
+	end
+	if self.m_ElseButton then
+		if self.m_ElseButton:GetInputter() then
+			self.m_ElseButton:GetInputter():GetParent():ChainDrag()
+		end
+	end
+	if self.m_FuncButton then
+		if self.m_FuncButton:GetInputter() then
+			self.m_FuncButton:GetInputter():GetParent():ChainDrag()
+		end
+	end
+	if self.m_ForButton then
+		if self.m_ForButton:GetInputter() then
+			self.m_ForButton:GetInputter():GetParent():ChainDrag()
+		end
+	end
+end
+function PANEL:StopChainDrag()
+	self.m_Dragging = false
+	self:MouseCapture(false)
+	for k,v in pairs(self.m_InputButtons)do
+		if v:GetInputter() then
+			v:GetInputter():GetParent():StopChainDrag()
+		end
+	end
+	if self.m_BottomButton then
+		if self.m_BottomButton:GetInputter() then
+			self.m_BottomButton:GetInputter():GetParent():StopChainDrag()
+		end
+	end
+	if self.m_IfButton then
+		if self.m_IfButton:GetInputter() then
+			self.m_IfButton:GetInputter():GetParent():StopChainDrag()
+		end
+	end
+	if self.m_ElseButton then
+		if self.m_ElseButton:GetInputter() then
+			self.m_ElseButton:GetInputter():GetParent():StopChainDrag()
+		end
+	end
+	if self.m_FuncButton then
+		if self.m_FuncButton:GetInputter() then
+			self.m_FuncButton:GetInputter():GetParent():StopChainDrag()
+		end
+	end
+	if self.m_ForButton then
+		if self.m_ForButton:GetInputter() then
+			self.m_ForButton:GetInputter():GetParent():StopChainDrag()
+		end
+	end
+end
+
 
 function PANEL:SetCallHook(b)
 	self.m_CallHook = b
@@ -590,7 +758,7 @@ function PANEL:GenerateCompileString()
 	local str
 	if not self.m_IsClass then
 		str = self:GetText().."( "
-		for k,v in ipairs(self.m_InputButtons)do
+		for i=1, #self.m_CompileOrder - (self.m_Expanding or 0) do
 			str = str.."%s, "
 		end
 		str = str..")"
@@ -598,7 +766,7 @@ function PANEL:GenerateCompileString()
 		-- Panel:SetSize(100,1000) for example.
 		--str = [[FindMetaTable("]]..string.Explode(":", self:GetText())[1]..[["):]]..string.Explode(":", self:GetText())[2]
 		str = "(%s):"..string.Explode(":", self:GetText())[2].."("
-		for i=2, #self.m_InputButtons do
+		for i=2, #self.m_CompileOrder - (self.m_Expanding or 0) do
 			str = str.."%s, "
 		end
 		str = str..")"
@@ -615,7 +783,8 @@ function PANEL:Compile()
 	for k,v in ipairs(self:CompileChildren())do
 		s[k] = tostring(v)
 	end
-	local fin = string.format(self.m_CompileString, LUABEE.GetValidArgs(s[1],s[2],s[3],s[4],s[5],s[6],s[7],s[8],s[9],s[10],s[11],s[12],s[13],s[14],s[15],s[16],s[17],s[18],s[19],s[20]) or "")
+	
+	local fin = string.format(self.m_CompileString, LUABEE.GetValidArgs(unpack(s)))
 	if !fin or fin=="" then
 		LUABEE.CompileLog("ERROR: A compile string was nil --> '"..fin.."'", 3)
 	end
@@ -633,6 +802,8 @@ function PANEL:CompileChildren()
 	for k,v in ipairs(self.m_CompileOrder)do
 		if v:GetInputter() then
 			rtrn[k]=v:GetInputter():GetParent():Compile()
+		else
+			rtrn[k]="_"
 		end
 	end
 	return rtrn
@@ -688,6 +859,28 @@ function PANEL:PerformLayout()
 	self:UpdateSize()
 	
 	self.Label:Center()
+	
+	local outputs = self.m_OutputButtons
+	local num = #outputs
+	local x2,y2
+	local w,h = self:GetSize()
+	local max = (20*num)+(20*math.max(num-1,0))
+	for i,b in ipairs(outputs)do
+		x2,y2 = 0, (20*i)+(20*math.max(i-1,0))+((h-max)/2)-20
+		b:SetPos(x2,y2)
+	end
+	
+	local inputs = self.m_InputButtons
+	num = #inputs
+	max = (20*num)+(20*math.max(num-1,0))
+	for i,b in ipairs(inputs)do
+		x2,y2 = w-20, (20*i)+(20*math.max(i-1,0))+((h-max)/2)-20
+		b:SetPos(x2,y2)
+	end
+	
+	if self.m_BottomButton then
+		self.m_BottomButton:AlignBottom(0)
+	end
 	
 	//self.Label:CopyBounds( self )
 	
@@ -777,4 +970,4 @@ function PANEL:Paint()
 	
 end
 
-vgui.Register( "CodeBlock", PANEL, "DPanel" ) --ToDo: Make A CodeBlock Base panel
+vgui.Register( "CodeBlock", PANEL, "DPanel" )

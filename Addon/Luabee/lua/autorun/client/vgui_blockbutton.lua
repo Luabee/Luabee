@@ -136,7 +136,7 @@ function PANEL:CreateInputLine(p)
 end
 
 function PANEL:Link(p, b)
-	
+	if not p then return end
 	local stype, ptype = self:GetType(), p:GetType()
 	if self:CompatibleLink(p) then
 		if not b then

@@ -80,7 +80,7 @@ LUABEE.CatalogFunction({
 },"cam",_,_)
 
 LUABEE.CatalogFunction({
-	name="cam.End3D2D",
+	name="cam.End3D",
 	args = {},
 	returns = {},
 	realm = "Client",
@@ -90,6 +90,42 @@ LUABEE.CatalogFunction({
 	This means that draw.RoundedBox and surface.DrawPoly will work.
 	See cam.Start3D for more info.]]
 },"cam",_,_)
+
+LUABEE.CatalogFunction({
+	name="cam.StartOrthoView",
+	args = {"left", "top", "right", "bottom"},
+	returns = {},
+	realm = "Client",
+	desc=[[Starts an orthographic projection.
+	Make sure to use cam.EndOrthoView after cam.StartOrthoView or bad things happen.
+	Code between cam.StartOrthoView and cam.EndOrthoView can be used like a paint hook.
+	This means that draw.RoundedBox and surface.DrawPoly will work.]]
+},"cam",_,_)
+
+LUABEE.CatalogFunction({
+	name="cam.EndOrthoView",
+	args = {},
+	returns = {},
+	realm = "Client",
+	desc=[[Ends an orthographic projection.
+	Use this after cam.StartOrthoView or GMod will crash.
+	Code between cam.StartOrthoView and cam.EndOrthoView can be used like a paint hook.
+	This means that draw.RoundedBox and surface.DrawPoly will work.
+	See cam.StartOrthoView for more info.]]
+},"cam",_,_)
+
+LUABEE.CatalogFunction({
+	name="cam.IgnoreZ",
+	args = {"bool"},
+	returns = {},
+	realm = "Client",
+	desc=[[Enables or disables IgnoreZ.
+	Tells the renderer to ignore the depth buffer.
+	This draws any upcoming operation on top of everything else.
+	Follow any cam.IgnoreZ(true) with a cam.IgnoreZ(false).]]
+},"cam",_,_)
+
+
 
 
 

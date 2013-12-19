@@ -29,7 +29,8 @@ hook.Add("Initialize", "Saving Luabee Files", function()
 			
 			if !block:GetCallHook() then
 				local index
-				for k,v in pairs(LUABEE.CatalogedFunctions[block.m_CatalogTable.Section][block.m_CatalogTable.category or block.category])do
+				local tbl = LUABEE.CatalogedFunctions[block.m_CatalogTable.Section][block.m_CatalogTable.category or block.category]
+				for k,v in pairs(tbl or {})do
 					if block.m_CatalogTable.name == v.name then
 						index = k
 					end
@@ -124,7 +125,7 @@ hook.Add("Initialize", "Saving Luabee Files", function()
 				blk:SetText("Call Hook")
 				blk:SetFunction(function() end)
 				blk:SetCallHook(true)
-				blk.m_CatalogTable = {callhook=true,category="Luabee Stuff",realm="Shared",name="Call Hook",args={},returns={},desc="This is the call hook of this file.\nWhen the file is ran or saved, the call hook is where it all begins.\nYou can not place or delete a call hook as there must only be one per file.\nSee the tutorial on the call hook for more info."}
+				blk.m_CatalogTable = {callhook=true,expanding=0,category="Luabee Stuff",realm="Shared",name="Call Hook",args={},returns={},desc="This is the call hook of this file.\nWhen the file is ran or saved, the call hook is where it all begins.\nYou can not place or delete a call hook as there must only be one per file.\nSee the tutorial on the call hook for more info."}
 				blk.m_Constructor = {}
 				blk:SetPos(block.X, block.Y)
 				blk:SetColor(Color(0,170,0,255))
@@ -132,7 +133,7 @@ hook.Add("Initialize", "Saving Luabee Files", function()
 				continue
 			end
 			
-			blk.m_CatalogTable = LUABEE.CatalogedFunctions[block.TableIndex.section][block.TableIndex.category or block.category][block.TableIndex.index]
+			blk.m_CatalogTable = table.Copy(LUABEE.CatalogedFunctions[block.TableIndex.section][block.TableIndex.category or block.category][block.TableIndex.index])
 			
 			blk:SetPos(block.X, block.Y)
 			
@@ -141,7 +142,7 @@ hook.Add("Initialize", "Saving Luabee Files", function()
 				for k,v in pairs(blk.m_CatalogTable.block)do
 					blk[k]=v
 				end
-				blk.m_Constructor = blk.m_CatalogTable.block
+				blk.m_Constructor = table.Copy(blk.m_CatalogTable.block)
 			end
 			if blk.m_CatalogTable.func then
 				blk:SetFunction(blk.m_CatalogTable.func)
@@ -152,8 +153,9 @@ hook.Add("Initialize", "Saving Luabee Files", function()
 				blk:SetFunction(_G[blk.m_CatalogTable.name])
 			end
 			blk:SetText(blk.m_CatalogTable.name)
-			blk:SetOutputs(blk.m_CatalogTable.returns)
-			blk:SetInputs(blk.m_CatalogTable.args)
+			blk:SetOutputs(table.Copy(blk.m_CatalogTable.returns))
+			blk:SetInputs(table.Copy(blk.m_CatalogTable.args))
+			blk:SetExpanding(blk.m_CatalogTable.expanding or 0)
 			blk:Activate()
 			
 			blk.ID = block.ID
@@ -170,7 +172,7 @@ hook.Add("Initialize", "Saving Luabee Files", function()
 				panel:OnMouseWheeled(d)
 			end
 			
-			blk.Inputters = block.inputters
+			blk.Inputters = table.Copy(block.inputters)
 			
 			blk.category = block.category
 			
@@ -221,7 +223,7 @@ hook.Add("Initialize", "Saving Luabee Files", function()
 				blk:SetText("Call Hook")
 				blk:SetFunction(function() end)
 				blk:SetCallHook(true)
-				blk.m_CatalogTable = {callhook=true,category="Luabee Stuff",realm="Shared",name="Call Hook",args={},returns={},desc="This is the call hook of this file.\nWhen the file is ran or saved, the call hook is where it all begins.\nYou can not place or delete a call hook as there must only be one per file.\nSee the tutorial on the call hook for more info."}
+				blk.m_CatalogTable = {callhook=true,expanding=0,category="Luabee Stuff",realm="Shared",name="Call Hook",args={},returns={},desc="This is the call hook of this file.\nWhen the file is ran or saved, the call hook is where it all begins.\nYou can not place or delete a call hook as there must only be one per file.\nSee the tutorial on the call hook for more info."}
 				blk.m_Constructor = {}
 				blk:SetPos(block.X, block.Y)
 				blk:SetColor(Color(0,170,0,255))
@@ -229,7 +231,7 @@ hook.Add("Initialize", "Saving Luabee Files", function()
 				continue
 			end
 			
-			blk.m_CatalogTable = LUABEE.CatalogedFunctions[block.TableIndex.section][block.TableIndex.category or block.category][block.TableIndex.index]
+			blk.m_CatalogTable = table.Copy(LUABEE.CatalogedFunctions[block.TableIndex.section][block.TableIndex.category or block.category][block.TableIndex.index])
 			
 			blk:SetPos(block.X, block.Y)
 			
@@ -238,19 +240,20 @@ hook.Add("Initialize", "Saving Luabee Files", function()
 				for k,v in pairs(blk.m_CatalogTable.block)do
 					blk[k]=v
 				end
-				blk.m_Constructor = blk.m_CatalogTable.block
+				blk.m_Constructor = table.Copy(blk.m_CatalogTable.block)
 			end
 			if blk.m_CatalogTable.func then
 				blk:SetFunction(blk.m_CatalogTable.func)
 			elseif _G[block.TableIndex.category] then
-				--Disabling this for classes issues. Not necessary anyway.
+				--Disabling this to avoid collision.
 				--blk:SetFunction(_G[block.TableIndex.category][string.Explode(".", blk.m_CatalogTable.name)[2]])
 			elseif _G[blk.m_CatalogTable.name] then
 				blk:SetFunction(_G[blk.m_CatalogTable.name])
 			end
 			blk:SetText(blk.m_CatalogTable.name)
-			blk:SetOutputs(blk.m_CatalogTable.returns)
-			blk:SetInputs(blk.m_CatalogTable.args)
+			blk:SetOutputs(table.Copy(blk.m_CatalogTable.returns))
+			blk:SetInputs(table.Copy(blk.m_CatalogTable.args))
+			blk:SetExpanding(blk.m_CatalogTable.expanding or 0)
 			blk:Activate()
 			
 			blk.ID = block.ID
@@ -267,7 +270,7 @@ hook.Add("Initialize", "Saving Luabee Files", function()
 				panel:OnMouseWheeled(d)
 			end
 			
-			blk.Inputters = block.inputters
+			blk.Inputters = table.Copy(block.inputters)
 			
 			blk.category = block.category
 			
@@ -293,6 +296,9 @@ hook.Add("Initialize", "Saving Luabee Files", function()
 				end
 				
 			end
+		end
+		if LUABEE.Config.Debug:GetBool() then
+			print("--> LUABEE: File Opened.")
 		end
 		
 		return tab

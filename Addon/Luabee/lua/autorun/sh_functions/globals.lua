@@ -6,6 +6,7 @@ LUABEE.CatalogFunction({
 	name = "print",
 	args = {"msg"},
 	returns = {},
+	expanding = 1,
 	realm = "Shared",
 	desc = [[Prints [msg] to the console.
 	[msg] can be anything, not just a string.
@@ -58,6 +59,7 @@ LUABEE.CatalogFunction({
 	[tbl] will be a table containing functions for a class [type].
 	Metatables are the first argument to a class function.
 	Here is a list of default metatables:
+	
 	"NPC", "Player", "Entity", "Panel", "CLuaEmitter",
 	"CLuaParticle", "Weapon", "CTakeDamageInfo", "ISave"
 	"VMatrix", "Angle", "IRestore", "CSENT_vehicle"

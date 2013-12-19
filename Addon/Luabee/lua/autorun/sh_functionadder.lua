@@ -61,23 +61,97 @@ end
 function IncludeSh(f)
 	if SERVER then
 		AddCSLuaFile(f)
+		include(f)
 	end
 	include(f)
 end
 
+--Catalogs files from http://wiki.garrysmod.com
+function LUABEE.AddWikiCategory(type, pagename)
+	http.Fetch( "http://wiki.garrysmod.com/page/Category:"..pagename,
+		function( body, len, headers, code )
+			-- The first argument is the HTML we asked for.
+			
+			for w in string.gfind(body, [[title="]]..pagename..[[/([%a_]+)]])do
+				LUABEE.AddWikiPage(type, pagename ,w)
+				if CLIENT then
+					if LUABEE.Config.Debug:GetBool() then
+						print("Added Category:", type, pagename)
+					end
+				end
+			end
+		end,
+		function( err )
+			MsgC(Color(230,0,0),"--> LUABEE failed to fetch \""..pagename.."\" from the wiki. Received error: "..err.."\n") 
+		end
+	)
+	
+end
+
+function LUABEE.AddWikiPage(type, cat, name)
+	local url = "http://wiki.garrysmod.com/page/"..cat.."/"..name
+	http.Fetch( url,
+		function( body, len, headers, code )
+			-- The first argument is the HTML we asked for.
+			if not string.find(body, "There is currently no text in this page.") then
+				if LUABEE.CatalogedFunctions[type][cat][name] then
+					LUABEE.CatalogedFunctions[type][cat][name].wiki = body
+				else
+					local l,c,h,g
+					if type == "Libraries" then
+						l = cat
+					elseif type == "Classes" then
+						c = cat
+					elseif type == "Hooks" then
+						h = cat
+					else
+						g = cat
+					end
+					
+					LUABEE.CatalogFunction(LUABEE.ReadWiki(body, url),l,c,h,g)
+					if CLIENT then
+						if LUABEE.Config.Debug:GetBool() then
+							print("Added Function:", cat, name)
+						end
+					end
+				end
+			end
+		end,
+		function( err )
+			MsgC(Color(230,0,0),"--> LUABEE failed to fetch \""..cat.."/"..name.."\" from the wiki. Received error: "..err.."\n") 
+		end
+	)
+	
+end
+
+function LUABEE.ReadWiki(html, url)
+	local rtrn = {
+		name = string.match(html, [[<div class="function_line">([%w_%:%.]+)]]),
+		args = {},
+		returns = {},
+		realm = "",
+		desc = [[description]],
+		wiki = url
+	}
+	for w in string.gfind(html, [[<span class="arg_chunk">.-</a> ([%w_%s]+)</span>]])do --5 letter arguments or less.
+		table.insert(rtrn.args, w)
+	end
+	for w in string.gfind(html, [[<span class="ret_chunk">.-">%s?([%w_%s]+)<]])do --5 letter arguments or less.
+		table.insert(rtrn.returns, w)
+	end
+	return rtrn
+	
+	
+end
+
 --Add Function files here:---------------------------
-
-IncludeSh("sh_functions/luaoperators.lua")
-IncludeSh("sh_functions/achievements.lua")
-IncludeSh("sh_functions/globals.lua")
-IncludeSh("sh_functions/util.lua")
-IncludeSh("sh_functions/vgui.lua")
-IncludeSh("sh_functions/weapons.lua")
-IncludeSh("sh_functions/widgets.lua")
-IncludeSh("sh_functions/definition.lua")
-IncludeSh("sh_functions/table.lua")
-IncludeSh("sh_functions/class_angle.lua")
-
+local files, folders = file.Find("autorun/sh_functions/*.lua", "LUA")
+for k,fil in pairs(files)do
+	IncludeSh("sh_functions/"..fil)
+end
+timer.Simple(.5, function()
+	print("--> LUABEE: Included "..#files.." function category files.")
+end)
 -----------------------------------------------------
 
 /*

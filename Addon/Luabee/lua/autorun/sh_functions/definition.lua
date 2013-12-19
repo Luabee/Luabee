@@ -8,7 +8,8 @@ LUABEE.CatalogFunction({
 	returns = {""},
 	realm = "Shared",
 	desc = [[Returns a user-defined string.
-	Will always be text.]],
+	Will always be text.
+	Allows for multiline support. All strings are literal.]],
 	func=function() return end,
 	block = {
 		
@@ -56,6 +57,13 @@ LUABEE.CatalogFunction({
 			self.m_TextBox.OnTextChanged = function(txtbox)
 				self:PerformLayout()
 			end
+			self.m_TextBox.OnMousePressed = function(txtbox, mc)
+				if mc == MOUSE_LEFT then
+					if self:GetDragging() then
+						self:StopDragging()
+					end
+				end
+			end
 			
 			self:PerformLayout()
 			
@@ -69,10 +77,6 @@ LUABEE.CatalogFunction({
 			else
 				self.m_TextBox:SetValue("string")
 			end
-		end,
-		
-		Run = function(self)
-			return self.m_TextBox:GetValue()
 		end,
 		
 		GenerateCompileString = function(self)
@@ -107,6 +111,13 @@ LUABEE.CatalogFunction({
 			self.m_NumBox:Center()
 			self.m_NumBox.m_IsInput = true
 			self.m_NumBox:SetDecimals(99)
+			self.m_NumBox.OnMousePressed = function(numbox, mc)
+				if mc == MOUSE_LEFT then
+					if self:GetDragging() then
+						self:StopDragging()
+					end
+				end
+			end
 			
 			self:PerformLayout()
 			
@@ -179,6 +190,13 @@ LUABEE.CatalogFunction({
 			self.m_BoolBox.OnSelect = function(self,i,txt,bool)
 				self.m_Value = bool
 			end
+			self.m_BoolBox.OnMousePressed = function(bbox, mc)
+				if mc == MOUSE_LEFT then
+					if self:GetDragging() then
+						self:StopDragging()
+					end
+				end
+			end
 			
 			self:PerformLayout()
 			
@@ -204,145 +222,19 @@ LUABEE.CatalogFunction({
 	args = {"item"},
 	returns = {""},
 	realm = "Shared",
+	expanding = 1,
 	desc = [[Creates and returns a table.
 	You can add items by connecting them to the inputs.
 	You can also use table.insert and table.AddItem to add objects.
 	See the tutorial on tables for more info.]],
-	func=function(i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20) return {i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20} end,
 	block = {
-		OnLinked = function(self,button)
-			if button:GetType() == LUABEE_INPUT then
-				if button:GetParent() == self then
-					if #self:GetInputs() < 20 then
-						table.insert(self:GetInputs(), "item")
-						self:PerformLayout()
-					
-						self:GetOutputButtons()[1]:CenterVertical()
-						
-						local num = #self:GetInputs()
-						local i = num
-						local max = (20*num)+(20*math.max(num-1,0))
-						local x2,y2
-						local w,h = self:GetSize()
-						x2,y2 = w-20, (20*i)+(20*math.max(i-1,0))+((h-max)/2)-20
-						local pnl = vgui.Create("BlockButton", self)
-						pnl:SetType(LUABEE_INPUT)
-						pnl:SetPos(x2,y2)
-						
-						table.insert(self:GetInputButtons(), pnl)
-					end
-				end
-			end
-		end,
-		
-		OnLinkRemoved = function(self,button)
-			if button:GetType() == LUABEE_INPUT then
-				if button:GetParent() == self then
-					table.remove(self:GetInputs(), #self:GetInputs())
-					self:PerformLayout()
-					self:GetOutputButtons()[1]:CenterVertical()
-					self:GetInputButtons()[#self:GetInputButtons()]:Remove()
-					table.remove(self:GetInputButtons(), #self:GetInputButtons())
-				end
-			end
-		end,
-		
-		Duplicate = function(self,parent)
-			if parent == LUABEE.WINDOW then
-				local block = vgui.Create("CodeBlock", parent)
-	
-				for k,v in pairs(self.m_Constructor)do
-					block[k]=v
-				end
-				
-				block.m_Constructor = self.m_Constructor
-				block.m_CatalogTable = self.m_CatalogTable
-				
-				block:SetColor(self:GetColor())
-				block:SetPos(gui.MousePos())
-				block:SetFunction(self:GetFunction())
-				block:SetOutputs(self:GetOutputs())
-				block:SetInputs(self:GetInputs())
-				block:SetText(self:GetText())
-				block:SetUserDefined(self:GetUserDefined())
-				block:Activate()
-				timer.Simple(.001, function()
-					block:StartDragging({block:GetWide()/2, block:GetTall()/2})
-				end)
-				return block
-			else
-				Error("Tables are too glitchy to be duplicated at this time. Sorry.")
-			end
-		end,
-		
-		Think = function(self)
-			if not self:GetActivated() then
-				self:SetInputs({"item"})
-				self:PerformLayout()
-			else
-				local c = 0
-				for k,v in ipairs(self:GetInputButtons())do
-					if v:GetInputter() then c = c+1 end
-				end
-				if c == #self:GetInputs() then
-					table.insert(self:GetInputs(), "item")
-					self:PerformLayout()
-				
-					self:GetOutputButtons()[1]:CenterVertical()
-					
-					local num = #self:GetInputs()
-					local i = num
-					local max = (20*num)+(20*math.max(num-1,0))
-					local x2,y2
-					local w,h = self:GetSize()
-					x2,y2 = w-20, (20*i)+(20*math.max(i-1,0))+((h-max)/2)-20
-					local pnl = vgui.Create("BlockButton", self)
-					pnl:SetType(LUABEE_INPUT)
-					pnl:SetPos(x2,y2)
-					
-					table.insert(self:GetInputButtons(), pnl)
-				elseif c+1 < #self:GetInputs() then
-					table.remove(self:GetInputs(), #self:GetInputs())
-					self:PerformLayout()
-					self:GetOutputButtons()[1]:CenterVertical()
-					if self:GetInputButtons()[table.maxn(self:GetInputButtons())] then
-						self:GetInputButtons()[table.maxn(self:GetInputButtons())]:Remove()
-					end
-					table.remove(self:GetInputButtons(), table.maxn(self:GetInputButtons()))
-				end
-			end
-			
-			if self.m_Dragging then
-				local ox,oy = self:GetDragOffset()[1], self:GetDragOffset()[2]
-				local mx,my =  self:GetParent():ScreenToLocal(gui.MousePos())
-				self:SetPos(mx-ox,my-oy)
-			end
-			
-			if self:IsHovered() then
-				self:SetDrawColor(self:GetHilightedColor())
-			else
-				self:SetDrawColor(self:GetColor())
-			end		
-		end,
-		
-		ClearAllLinks = function(self)
-			for k,v in pairs(self.m_InputButtons)do --clear inputs and outputs
-				v:ClearInputs()
-				v:ClearOutputs()
-			end
-			local v = self.m_OutputButtons[1]
-			v:ClearInputs()
-			v:ClearOutputs()
-			self:SetInputs({"item"})
-		end,
 		GenerateCompileString = function(self)
-			self:SetCompileOrder(self.m_InputButtons)
 			local str = "{"
-			for k,v in ipairs(self.m_InputButtons)do
+			for i=1, #self.m_CompileOrder - 1 do
 				str = str.."%s, "
 			end
-			str=str..")"
-			return string.Replace(str, "%s, ", "%s}")
+			str=str.."}"
+			return string.Replace(str, "s, }", "s}")
 		end
 	}
 	
@@ -358,6 +250,7 @@ LUABEE.CatalogFunction({
 	[name] must be a string. 
 	If a variable with that name already exists then it will be overwritten.
 	[data] can be anything.
+	Using a name like "print" will overwrite it, so use unique names.
 	You can retrieve the value of this variable with Get Variable.
 	See the tutorial on variables for more info.]],
 	func=function(name,value)
@@ -368,7 +261,7 @@ LUABEE.CatalogFunction({
 	end,
 	block = {
 		GenerateCompileString = function(self)
-			return "LUABEE.Vars[(%s)] = (%s)"
+			return "_G[(%s)] = (%s)"
 		end
 	}
 	
@@ -437,29 +330,11 @@ LUABEE.CatalogFunction({
 						b:GetParent():SetToggled(false)
 					end
 				else
-					if not self:GetDragging() then
-						local dmenu = DermaMenu()
-						dmenu:AddOption("Run", function() self:Run() end)
-						if not self:GetCallHook() then
-							dmenu:AddSpacer()
-							dmenu:AddOption("Duplicate", function() self:Duplicate(self:GetParent()) end)
-							dmenu:AddOption("Chain Duplicate", function() self:ChainDuplicate(self:GetParent()) end)
-							dmenu:AddSpacer()
-						end
-						if self:GetUserDefined() then
-							dmenu:AddOption("Modify", function() self:Modify() end)
-						end
-						if not self:GetCallHook() then
-							dmenu:AddSpacer()
-							dmenu:AddOption("Delete", function() self:Delete() end)
-							dmenu:AddOption("Chain Delete", function() self:ChainDelete() end)
-							dmenu:AddSpacer()
-						end
-						dmenu:AddSpacer()
-						dmenu:AddOption("About", function() self:OpenInfo() end)
-						dmenu:AddSpacer()
-						dmenu:AddOption("Cancel", function() end)
-						dmenu:Open()
+					if input.IsMouseDown(MOUSE_LEFT) then
+						LUABEE.AddHistoryPoint()
+						
+						self:MouseCapture(true)
+						self:ChainDrag()
 					end
 				end
 				
@@ -606,3 +481,4 @@ LUABEE.CatalogFunction({
 	}
 	
 },_,_,_,"Lua Definition")
+	

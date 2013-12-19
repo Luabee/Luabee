@@ -179,7 +179,7 @@ LUABEE.CatalogFunction({
 	desc = [[Used to check if something [Test] is true.
 	If test is true, then it runs the stuff in first space.
 	If the test is false, it runs the stuff in the second space.
-	Using multiple ifelse statements inside each other can check for many different scenarios.]],
+	Using ifelse statements inside each other can check for many things.]],
 	func=function() return end,
 	block = {
 		
@@ -478,12 +478,13 @@ LUABEE.CatalogFunction({
 
 -------------------------------------------------------------------------------------------------------
 
-LUABEE.CatalogFunction({
+LUABEE.CatalogFunction({ --Still doesn't work.
 
 	name = "Call",
 	args = {"func", "arg"},
 	returns = {""},
 	realm = "Shared",
+	expanding = 2,
 	desc = [[Calls a user-defined function.
 	This function returns whatever that function returns.
 	[func] MUST be a user-defined function. Usually stored in a variable.
@@ -493,160 +494,14 @@ LUABEE.CatalogFunction({
 	See the tutorial on functions for more info.]],
 	func = function() return end,
 	block = {
-		Run = function(self)
-			if self.m_InputButtons[1]:GetInputter() then
-				LUABEE.Tabs:GetActiveTab().m_CurrentArgs = {}
-				for k,v in pairs(self.m_InputButtons)do
-					if v:GetInputter() then
-						table.insert(LUABEE.Tabs:GetActiveTab().m_CurrentArgs, v:GetInputter():GetParent():Run())
-					end
-				end
-				return self.m_InputButtons[1]:GetInputter():GetParent():Run()()
-			end
-		end,
-		
-		OnLinked = function(self,button)
-			if button == self:GetInputButtons()[1] then return end
-			if button:GetType() == LUABEE_INPUT then
-				if button:GetParent() == self then
-					if #self:GetInputs() < 20 then
-						table.insert(self:GetInputs(), "arg")
-						self:PerformLayout()
-					
-						self:GetOutputButtons()[1]:AlignTop(((self:GetTall()-60)/2)+20)
-						
-						local num = #self:GetInputs()
-						local i = num
-						local max = (20*num)+(20*math.max(num-1,0))
-						local x2,y2
-						local w,h = self:GetSize()
-						x2,y2 = w-20, (20*i)+(20*math.max(i-1,0))+((h-max)/2)-20
-						local pnl = vgui.Create("BlockButton", self)
-						pnl:SetType(LUABEE_INPUT)
-						pnl:SetPos(x2,y2)
-						
-						table.insert(self:GetInputButtons(), pnl)
-					end
-				end
-			end
-		end,
-		
-		OnLinkRemoved = function(self,button)
-			if button == self:GetInputButtons()[1] then return end
-			if button:GetType() == LUABEE_INPUT then
-				if button:GetParent() == self then
-					table.remove(self:GetInputs(), #self:GetInputs())
-					self:PerformLayout()
-					self:GetOutputButtons()[1]:AlignTop(((self:GetTall()-60)/2)+20)
-					self:GetInputButtons()[#self:GetInputButtons()]:Remove()
-					table.remove(self:GetInputButtons(), #self:GetInputButtons())
-				end
-			end
-		end,
-		
-		Duplicate = function(self,parent)
-			if parent == LUABEE.WINDOW then
-				local block = vgui.Create("CodeBlock", parent)
 	
-				for k,v in pairs(self.m_Constructor)do
-					block[k]=v
-				end
-				
-				block.m_Constructor = self.m_Constructor
-				block.m_CatalogTable = self.m_CatalogTable
-				
-				block:SetColor(self:GetColor())
-				block:SetPos(gui.MousePos())
-				block:SetFunction(self:GetFunction())
-				block:SetOutputs(self:GetOutputs())
-				block:SetInputs(self:GetInputs())
-				block:SetText(self:GetText())
-				block:SetUserDefined(self:GetUserDefined())
-				block:Activate()
-				timer.Simple(.001, function()
-					block:StartDragging({block:GetWide()/2, block:GetTall()/2})
-				end)
-				return block
-			else
-				Error("Call functions are too glitchy to be duplicated at this time. Sorry.")
-			end
-		end,
-		
-		Think = function(self)
-			if not self:GetActivated() then
-				self:SetInputs({"func", "arg"})
-				self:PerformLayout()
-			else
-				if #self:GetInputButtons() < 2 then
-					self:SetInputs({"func","arg"})
-					self:PerformLayout()
-				
-					self:GetOutputButtons()[1]:AlignTop(((self:GetTall()-60)/2)+20)
-					
-					local num = #self:GetInputs()
-					local i = num
-					local max = (20*num)+(20*math.max(num-1,0))
-					local x2,y2
-					local w,h = self:GetSize()
-					x2,y2 = w-20, (20*i)+(20*math.max(i-1,0))+((h-max)/2)-20
-					local pnl = vgui.Create("BlockButton", self)
-					pnl:SetType(LUABEE_INPUT)
-					pnl:SetPos(x2,y2)
-					table.insert(self:GetInputButtons(), pnl)
-					
-					self:PerformLayout()
-				
-					self:GetOutputButtons()[1]:AlignTop(((self:GetTall()-60)/2)+20)
-					
-					local num = #self:GetInputs()
-					local i = num
-					local max = (20*num)+(20*math.max(num-1,0))
-					local x2,y2
-					local w,h = self:GetSize()
-					x2,y2 = w-20, (20*i)+(20*math.max(i-1,0))+((h-max)/2)-20
-					local pnl = vgui.Create("BlockButton", self)
-					pnl:SetType(LUABEE_INPUT)
-					pnl:SetPos(x2,y2)
-					table.insert(self:GetInputButtons(), pnl)
-				end
-			end
-			
-			if self.m_Dragging then
-				local ox,oy = self:GetDragOffset()[1], self:GetDragOffset()[2]
-				local mx,my =  self:GetParent():ScreenToLocal(gui.MousePos())
-				self:SetPos(mx-ox,my-oy)
-			end
-			
-			if self:IsHovered() then
-				self:SetDrawColor(self:GetHilightedColor())
-			else
-				self:SetDrawColor(self:GetColor())
-			end		
-		end,
-		
-		ClearAllLinks = function(self)
-			for k,v in pairs(self.m_InputButtons)do --clear inputs and outputs
-				v:ClearInputs()
-				v:ClearOutputs()
-			end
-			local v = self.m_OutputButtons[1]
-			v:ClearInputs()
-			v:ClearOutputs()
-			self:SetInputs({"func", "arg"})
-		end,
-		
 		GenerateCompileString = function(self)
 			local str = "%s("
-			for i=1, (#self.m_InputButtons)-2 do
+			for i=1, #self.m_CompileOrder - 2 do
 				str = str.."%s, "
 			end
-			
-			if string.Right(str, 2) == ", " then
-				str = string.Left(str, string.len(str)-2)
-			end
-			
-			str = str..")"
-			return str
+			str=str..")"
+			return string.Replace(str, "s, )", "s)")
 		end
 	}
 },_,_,_,"Lua Utilities")

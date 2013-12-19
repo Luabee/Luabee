@@ -21,8 +21,8 @@ hook.Add("Initialize", "LUABEE_INIT", function()
 		end
 	
 	LUABEE.Tabs = vgui.Create("DPropertySheet", LUABEE.WINDOW)
-		LUABEE.Tabs:SetPos(277,44)
-		LUABEE.Tabs:SetSize(ScrW()-277,ScrH()-46)
+		LUABEE.Tabs:SetPos(302,44)
+		LUABEE.Tabs:SetSize(ScrW()-302,ScrH()-46)
 		LUABEE.Tabs:SetFadeTime(.2)
 	
 		function LUABEE.Tabs:CreateTab(name,tip,bNoCallHook)
@@ -159,107 +159,19 @@ hook.Add("Initialize", "LUABEE_INIT", function()
 	
 	LUABEE.BlockSelector = vgui.Create("DPropertySheet", LUABEE.WINDOW)
 		LUABEE.BlockSelector:SetPos(2,44)
-		LUABEE.BlockSelector:SetSize(275,ScrH()-46)
+		LUABEE.BlockSelector:SetSize(300,ScrH()-46)
 		function LUABEE.BlockSelector:OnMouseWheeled(d)
 			self:GetActiveTab():GetPanel():OnMouseWheeled(d)
 		end
-		for k,v in pairs(LUABEE.CatalogedFunctions) do
-			local Canvas = vgui.Create("DPanelList", LUABEE.BlockSelector)
-			Canvas:EnableVerticalScrollbar(true)
-			--Canvas:SetAutoSize(true)
-			Canvas:SetPadding(5)
-			Canvas:SetSpacing(2)
-			Canvas.ccats = {}
-			function Canvas:OnMousePressed()
-				local b = LUABEE.TopDropdowns:GetActiveButton()
-				if b then
-					b:SetSelected(false)
-					b.mnu:Hide()
-					b:GetParent():SetToggled(false)
-				end
-			end
-			
-			for name,library in SortedPairs(v)do
-				if name == "__Icon" then continue end
-				
-				local ccat = vgui.Create("DCollapsibleCategory")
-					ccat:SetLabel( name )
-					ccat:SetExpanded(false)
-					ccat:SetAnimTime(.05)
-					function ccat:OnMouseWheeled(d)
-						Canvas:OnMouseWheeled(d)
-					end
-					ccat.Header.DoClick = function()
-
-						ccat:Toggle()
-						for k,v in pairs(Canvas.ccats)do
-							if v == ccat then continue end
-							v:SetExpanded(false)
-						end
-
-					end
-				
-				local plist = vgui.Create("DPanelList")
-					plist:SetPadding(5)
-					plist:SetSpacing(20)
-					plist.H = 0
-					
-				local c = library.__Color
-				for index,func in pairs(library)do
-					if index == "__Color" then continue end
-					local blk = vgui.Create("CodeBlock")
-						func.category = name
-						blk:SetColor(c)
-						if func.block then
-							for k,v in pairs(func.block)do
-								blk[k]=v
-							end
-							blk.m_Constructor = func.block
-						end
-						if func.func then
-							blk:SetFunction(func.func)
-						elseif _G[name] then
-							if k!="Classes" then
-								blk:SetFunction(_G[name][string.Explode(".", func.name)[2]])
-							end
-						elseif _G[func.name] then
-							blk:SetFunction(_G[func.name])
-						end
-						blk.m_CatalogTable = func
-						blk:SetText(func.name)
-						blk:SetOutputs(func.returns)
-						blk:SetInputs(func.args)
-						blk:Activate()
-						blk:SetActivated(false)
-						function blk:OnMouseWheeled(d)
-							Canvas:OnMouseWheeled(d)
-						end
-					
-					plist:AddItem(blk)
-					plist.H = plist.H + blk:GetTall() + plist:GetSpacing()
-					
-				end
-				function plist.Think()
-					plist:SetSize(ccat:GetWide(), plist.H)
-				end
-				function plist:OnMouseWheeled(d)
-					Canvas:OnMouseWheeled(d)
-				end
-				
-				local w,h = ccat:GetWide(), plist.H
-				ccat:SetSize(w,h+ccat.Header:GetTall())
-				ccat.Think = function()
-					if ccat:GetExpanded() then
-						local w,h = ccat:GetWide(), plist.H
-						ccat:SetSize(w,h+ccat.Header:GetTall())
-					end
-					ccat.animSlide:Run()
-				end
-				ccat:SetContents(plist)
-				table.insert(Canvas.ccats, ccat)
-				Canvas:AddItem(ccat)
-				
-				function plist:OnMousePressed()
+		timer.Simple(15, function()
+			for k,v in pairs(LUABEE.CatalogedFunctions) do
+				local Canvas = vgui.Create("DPanelList", LUABEE.BlockSelector)
+				Canvas:EnableVerticalScrollbar(true)
+				--Canvas:SetAutoSize(true)
+				Canvas:SetPadding(5)
+				Canvas:SetSpacing(2)
+				Canvas.ccats = {}
+				function Canvas:OnMousePressed()
 					local b = LUABEE.TopDropdowns:GetActiveButton()
 					if b then
 						b:SetSelected(false)
@@ -268,11 +180,102 @@ hook.Add("Initialize", "LUABEE_INIT", function()
 					end
 				end
 				
+				for name,library in SortedPairs(v)do
+					if name == "__Icon" then continue end
+					
+					local ccat = vgui.Create("DCollapsibleCategory")
+						ccat:SetLabel( name )
+						ccat:SetExpanded(false)
+						ccat:SetAnimTime(.05)
+						function ccat:OnMouseWheeled(d)
+							Canvas:OnMouseWheeled(d)
+						end
+						ccat.Header.DoClick = function()
+
+							ccat:Toggle()
+							for k,v in pairs(Canvas.ccats)do
+								if v == ccat then continue end
+								v:SetExpanded(false)
+							end
+
+						end
+					
+					local plist = vgui.Create("DPanelList")
+						plist:SetPadding(5)
+						plist:SetSpacing(20)
+						plist.H = 0
+						
+					local c = library.__Color
+					for index,func in pairs(library)do
+						if index == "__Color" then continue end
+						local blk = vgui.Create("CodeBlock")
+							func.category = name
+							blk:SetColor(c)
+							if func.block then
+								for k,v in pairs(func.block)do
+									blk[k]=v
+								end
+								blk.m_Constructor = func.block
+							end
+							if func.func then
+								blk:SetFunction(func.func)
+							elseif _G[name] then
+								if k!="Classes" then
+									blk:SetFunction(_G[name][string.Explode(".", func.name)[2]])
+								end
+							elseif _G[func.name] then
+								blk:SetFunction(_G[func.name])
+							end
+							blk.m_CatalogTable = table.Copy(func)
+							blk:SetText(func.name)
+							blk:SetOutputs(table.Copy(func.returns))
+							blk:SetInputs(table.Copy(func.args))
+							blk:SetExpanding(func.expanding or 0)
+							blk:Activate()
+							blk:SetActivated(false)
+							function blk:OnMouseWheeled(d)
+								Canvas:OnMouseWheeled(d)
+							end
+						
+						plist:AddItem(blk)
+						plist.H = plist.H + blk:GetTall() + plist:GetSpacing()
+						
+					end
+					function plist.Think()
+						plist:SetSize(ccat:GetWide(), plist.H)
+					end
+					function plist:OnMouseWheeled(d)
+						Canvas:OnMouseWheeled(d)
+					end
+					
+					local w,h = ccat:GetWide(), plist.H
+					ccat:SetSize(w,h+ccat.Header:GetTall())
+					ccat.Think = function()
+						if ccat:GetExpanded() then
+							local w,h = ccat:GetWide(), plist.H
+							ccat:SetSize(w,h+ccat.Header:GetTall())
+						end
+						ccat.animSlide:Run()
+					end
+					ccat:SetContents(plist)
+					table.insert(Canvas.ccats, ccat)
+					Canvas:AddItem(ccat)
+					
+					function plist:OnMousePressed()
+						local b = LUABEE.TopDropdowns:GetActiveButton()
+						if b then
+							b:SetSelected(false)
+							b.mnu:Hide()
+							b:GetParent():SetToggled(false)
+						end
+					end
+					
+				end
+				
+				LUABEE.BlockSelector:AddSheet(k, Canvas, v.__Icon, false, false, k)
 			end
-			
-			LUABEE.BlockSelector:AddSheet(k, Canvas, v.__Icon, false, false, k)
-		end
-	
+		end)
+		
 	LUABEE.FunctionLookup = vgui.Create("DFrame")
 		LUABEE.FunctionLookup:SetSize(300,342)
 		LUABEE.FunctionLookup:Center()
@@ -302,17 +305,22 @@ hook.Add("Initialize", "LUABEE_INIT", function()
 						for k2,v2 in pairs(v1)do
 							if k2 == "__Color" then continue end
 							if string.match(v2.name, text) then
-								v2.category = k1
-								v2.type = k
-								table.insert(listitems, v2)
+								local v3 = table.Copy(v2)
+								v3.category = k1
+								v3.type = k
+								table.insert(listitems, v3)
 							end
 						end
 					end
 				end
 				dlist:Clear()
-				for k,v in pairs(listitems)do
+				for k,v in ipairs(listitems)do
 					dlist:AddLine(v.name).tbl = v
 				end
+			end
+			search.OnEnter = function(self)
+				dlist.DoDoubleClick(dlist, 1, dlist:GetLine(1))
+				self:SetValue("")
 			end
 		
 		dlist.DoDoubleClick = function(parent, index, line)
@@ -329,23 +337,26 @@ hook.Add("Initialize", "LUABEE_INIT", function()
 				end
 				blk.m_Constructor = func.block
 			end
-			if func.func then
-				blk:SetFunction(func.func)
-			elseif _G[name] then
-				blk:SetFunction(_G[name][string.Explode(".", func.name)[2]])
-			elseif _G[func.name] then
-				blk:SetFunction(_G[func.name])
-			end
-			blk.m_CatalogTable = func
+			-- if func.func then
+				-- blk:SetFunction(func.func)
+			-- elseif _G[name] then
+				-- blk:SetFunction(_G[name][string.Explode(".", func.name)[2]])
+			-- elseif _G[func.name] then
+				-- blk:SetFunction(_G[func.name])
+			-- end
+			blk.m_CatalogTable = table.Copy(func)
 			blk:SetText(func.name)
-			blk:SetOutputs(func.returns)
-			blk:SetInputs(func.args)
+			blk:SetOutputs(table.Copy(func.returns))
+			blk:SetInputs(table.Copy(func.args))
+			blk:SetExpanding(func.expanding or 0)
 			blk:Activate()
 			LUABEE.FunctionLookup:Close()
 			timer.Simple(.03, function()
 				blk:StartDragging({blk:GetWide()/2, blk:GetTall()/2})
 				blk:MouseCapture(true)
 			end)
+			dlist:Clear()
+			search:SetValue("")
 		end
 	
 	LUABEE.TopDropdowns = vgui.Create("TopDropdowns", LUABEE.WINDOW)
@@ -493,14 +504,23 @@ hook.Add("Initialize", "LUABEE_INIT", function()
 		end
 	end
 	
+	timer.Simple(15, function()
+		concommand.Add("Luabee", function()
+			
+			LUABEE.WINDOW:SetVisible(true)
+			LUABEE.WINDOW:MakePopup()
+			
+		end)
+		chat.AddText(Color(20,230,20), "Loaded Luabee.")
+		print("--> LUABEE Initialized.")
+	end)
+	
 	concommand.Add("Luabee", function()
 		
-		LUABEE.WINDOW:SetVisible(true)
-		LUABEE.WINDOW:MakePopup()
+		chat.AddText(Color(230,20,20), "Luabee is loading. Please wait...")
 		
 	end)
 	
-	print("--> LUABEE Initialized.")
 
 	// Shortened, made iterable - Josh 'Acecool' Moser
 	// I'm unsure of your intention with this function, but I did a test and it performed identically for me with no limit of vars.
@@ -559,13 +579,12 @@ end
 
 // Shortened - Josh 'Acecool' Moser
 // http://www.lua.org/pil/20.2.html
-// Caps = Inverse, so W strips all NON alpha-numeric
 function string.Safe( text )
-	text = string.gsub( text, "%W", "_" ); // gsub returns :: text, replacementsDone - print( gsub ) == "text	0"
+	text = string.gsub( text, '[\\/:%*%?"<>|]', "_" ); // gsub returns :: text, replacementsDone - print( gsub ) == "text	0"
 	return text;
 end
 
-function LUABEE.RunServer(c)
+function LUABEE.RunServer(c) --assumes the code is short enough to send.
 	net.Start("Luabee_Code")
 		net.WriteString(c)
 	net.SendToServer()
@@ -576,6 +595,7 @@ function LUABEE.OpenLuapad(txt)
 		lp_f:SetSize(ScrW()-400,ScrH()-400)
 		lp_f:Center()
 		lp_f:MakePopup()
+		lp_f:SetDraggable(true)
 		lp_f:SetTitle("Luapad")
 		
 	local lp = vgui.Create("LuapadEditor",lp_f) --Create a Luapad.
@@ -624,6 +644,14 @@ function LUABEE.OpenLuapad(txt)
 						print(path,name)
 						lp:SetText(file.Read(path.."/"..name, "GAME"))
 					end)
+			end},
+		})
+		AddTopDropdown("Edit", {
+			{"Undo", function()
+				lp:DoUndo()
+			end},
+			{"Redo", function()
+				lp:DoRedo()
 			end},
 		})
 		lp_f.lpdd = lpdd

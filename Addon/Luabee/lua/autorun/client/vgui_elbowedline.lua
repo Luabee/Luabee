@@ -7,7 +7,7 @@ AccessorFunc(PANEL, "m_Color", "Color")
 function PANEL:Init()
 	
 	self.m_Points = {}
-	self:SendToBack()
+	self:MoveToBack()
 	local colors = {}
 	colors[1] = Color(0,128,255)
 	colors[2] = Color(231,0,62,200)
@@ -65,6 +65,7 @@ function PANEL:Think()
 	end
 	self:SetPos(x,y)
 	self:SetSize(w,h)
+	self:MoveToBack()
 end
 
 function PANEL:Paint()
@@ -97,39 +98,7 @@ function PANEL:Paint()
 		surface.DrawLine(bx,h/2,bx,by)
 	end
 	
-	
 end
-
-
-
-
-
-function PANEL:SendToBack()
-	Z_POS.MIN = Z_POS.MIN - 1
-	self:SetZPos(Z_POS.MIN)
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
