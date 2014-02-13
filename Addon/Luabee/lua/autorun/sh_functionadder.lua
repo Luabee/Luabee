@@ -66,18 +66,53 @@ function IncludeSh(f)
 	include(f)
 end
 
+function LUABEE.OpenWikiCache()
+	if file.Exists("luabee/wiki/libraries.txt", "DATA") and file.Exists("luabee/wiki/classes.txt", "DATA") and file.Exists("luabee/wiki/hooks.txt", "DATA")  then
+		local Libs,Hooks,Classes = util.JSONToTable(file.Read("luabee/wiki/libraries.txt", "DATA")),util.JSONToTable(file.Read("luabee/wiki/hooks.txt", "DATA")),util.JSONToTable(file.Read("luabee/wiki/classes.txt", "DATA"))
+		for k,v in pairs(Libs)do
+			LUABEE.AddLibrary(k, Color(0,0,0))
+			for k2,func in pairs(v)do
+				LUABEE.CatalogFunction(func,k)
+			end
+		end
+		for k,v in pairs(Hooks)do
+			LUABEE.AddHook(k, Color(0,0,0))
+			for k2,func in pairs(v)do
+				LUABEE.CatalogFunction(func,_,_,k)
+			end
+		end
+		for k,v in pairs(Classes)do
+			LUABEE.AddClass(k, Color(0,0,0))
+			for k2,func in pairs(v)do
+				LUABEE.CatalogFunction(func,_,k)
+			end
+		end
+		LUABEE.PostInit()
+	else
+		file.CreateDir("luabee/wiki")
+		LUABEE.UpdateWiki()
+	end
+end
+
+LUABEE.Wiki = {}--Turn into JSON.
+LUABEE.Wiki.Libraries = {}
+LUABEE.Wiki.Hooks = {}
+LUABEE.Wiki.Classes = {}
 --Catalogs files from http://wiki.garrysmod.com
 function LUABEE.AddWikiCategory(type, pagename)
 	http.Fetch( "http://wiki.garrysmod.com/page/Category:"..pagename,
 		function( body, len, headers, code )
 			-- The first argument is the HTML we asked for.
-			
+			LUABEE.Wiki[type][pagename] = {}
+			local last
 			for w in string.gfind(body, [[title="]]..pagename..[[/([%a_]+)]])do
+				if w == last then continue end
 				LUABEE.AddWikiPage(type, pagename ,w)
+				last = w
 				if CLIENT then
-					if LUABEE.Config.Debug:GetBool() then
-						print("Added Category:", type, pagename)
-					end
+					-- if LUABEE.Config.Debug:GetBool() then
+						print("Added category from Wiki:", type, pagename)
+					-- end
 				end
 			end
 		end,
@@ -88,15 +123,19 @@ function LUABEE.AddWikiCategory(type, pagename)
 	
 end
 
+local pagenumber = 0
+local errorcount = 0
 function LUABEE.AddWikiPage(type, cat, name)
+	pagenumber = pagenumber + 1
 	local url = "http://wiki.garrysmod.com/page/"..cat.."/"..name
 	http.Fetch( url,
 		function( body, len, headers, code )
 			-- The first argument is the HTML we asked for.
 			if not string.find(body, "There is currently no text in this page.") then
 				if LUABEE.CatalogedFunctions[type][cat][name] then
-					LUABEE.CatalogedFunctions[type][cat][name].wiki = body
+					LUABEE.CatalogedFunctions[type][cat][name].wiki = url
 				else
+					local data = LUABEE.ReadWiki(body, url, type)
 					local l,c,h,g
 					if type == "Libraries" then
 						l = cat
@@ -108,31 +147,69 @@ function LUABEE.AddWikiPage(type, cat, name)
 						g = cat
 					end
 					
-					LUABEE.CatalogFunction(LUABEE.ReadWiki(body, url),l,c,h,g)
+					table.insert(LUABEE.Wiki[type][cat],data)
+					
+					LUABEE.CatalogFunction(data,l,c,h,g)
 					if CLIENT then
-						if LUABEE.Config.Debug:GetBool() then
-							print("Added Function:", cat, name)
-						end
+						-- if LUABEE.Config.Debug:GetBool() then
+							print("Added function from Wiki:", cat, name)
+						-- end
 					end
 				end
+			end
+			pagenumber = pagenumber - 1
+			if pagenumber == 0 then
+				MsgC(Color(0,230,0), Format("--> LUABEE updated with %s errors.\n", errorcount))
+				
+				Derma_Query("Luabee needs to restart to finish installation.", "Luabee", "Restart Now", function() concommand.Run("disconnect") end, "Restart Later", function() end)
+
+				LUABEE.PostInit()
+				
+				file.Write("luabee/wiki/libraries.txt", util.TableToJSON(LUABEE.Wiki.Libraries))
+				file.Write("luabee/wiki/classes.txt", util.TableToJSON(LUABEE.Wiki.Classes))
+				file.Write("luabee/wiki/hooks.txt", util.TableToJSON(LUABEE.Wiki.Hooks))
 			end
 		end,
 		function( err )
 			MsgC(Color(230,0,0),"--> LUABEE failed to fetch \""..cat.."/"..name.."\" from the wiki. Received error: "..err.."\n") 
+		
+			pagenumber = pagenumber - 1
+			errorcount = errorcount + 1
+			if pagenumber == 0 then
+				MsgC(Color(0,230,0), Format("--> LUABEE updated with %s errors.\n", errorcount))
+				
+				Derma_Query("Luabee needs to restart to finish installation.", "Luabee", "Restart Now", function() concommand.Run("disconnect") end, "Restart Later", function() end)
+
+				LUABEE.PostInit()
+				
+				file.Write("luabee/wiki/libraries.txt", util.TableToJSON(LUABEE.Wiki.Libraries))
+				file.Write("luabee/wiki/classes.txt", util.TableToJSON(LUABEE.Wiki.Classes))
+				file.Write("luabee/wiki/hooks.txt", util.TableToJSON(LUABEE.Wiki.Hooks))
+			end
 		end
 	)
 	
 end
 
-function LUABEE.ReadWiki(html, url)
+function LUABEE.ReadWiki(html, url, type)
 	local rtrn = {
-		name = string.match(html, [[<div class="function_line">([%w_%:%.]+)]]),
+		name = url,
+		-- name = string.match(html, [[<div class="function_line">([%w_%:%.]+)]]),
 		args = {},
 		returns = {},
 		realm = "",
-		desc = [[description]],
+		desc = [[d]],
 		wiki = url
 	}
+	
+	url = string.Explode("/",url)
+	local Type = (type == "Libraries" and ".") or ":"
+	rtrn.name = url[(#url)-1]..Type..url[#url]
+	
+	if type == "Classes" then
+		rtrn.args[1] = url[(#url)-1]
+	end
+	
 	for w in string.gfind(html, [[<span class="arg_chunk">.-</a> ([%w_%s]+)</span>]])do --5 letter arguments or less.
 		table.insert(rtrn.args, w)
 	end

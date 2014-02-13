@@ -765,7 +765,7 @@ function PANEL:GenerateCompileString()
 	else
 		-- Panel:SetSize(100,1000) for example.
 		--str = [[FindMetaTable("]]..string.Explode(":", self:GetText())[1]..[["):]]..string.Explode(":", self:GetText())[2]
-		str = "(%s):"..string.Explode(":", self:GetText())[2].."("
+		str = "%s:"..string.Explode(":", self:GetText())[2].."("
 		for i=2, #self.m_CompileOrder - (self.m_Expanding or 0) do
 			str = str.."%s, "
 		end

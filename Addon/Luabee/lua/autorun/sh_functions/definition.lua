@@ -283,7 +283,7 @@ LUABEE.CatalogFunction({
 	end,
 	block = {
 		GenerateCompileString = function(self)
-			return "(LUABEE.Vars[(%s)])"
+			return "(_G[(%s)])"
 		end
 	}
 	

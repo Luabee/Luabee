@@ -21,8 +21,8 @@ hook.Add("Initialize", "LUABEE_INIT", function()
 		end
 	
 	LUABEE.Tabs = vgui.Create("DPropertySheet", LUABEE.WINDOW)
-		LUABEE.Tabs:SetPos(302,44)
-		LUABEE.Tabs:SetSize(ScrW()-302,ScrH()-46)
+		LUABEE.Tabs:SetPos(304,44)
+		LUABEE.Tabs:SetSize(ScrW()-304,ScrH()-46)
 		LUABEE.Tabs:SetFadeTime(.2)
 	
 		function LUABEE.Tabs:CreateTab(name,tip,bNoCallHook)
@@ -156,14 +156,13 @@ hook.Add("Initialize", "LUABEE_INIT", function()
 		end
 		
 		LUABEE.Tabs:CreateTab("new.lua", "new.lua")
-	
 	LUABEE.BlockSelector = vgui.Create("DPropertySheet", LUABEE.WINDOW)
 		LUABEE.BlockSelector:SetPos(2,44)
 		LUABEE.BlockSelector:SetSize(300,ScrH()-46)
 		function LUABEE.BlockSelector:OnMouseWheeled(d)
 			self:GetActiveTab():GetPanel():OnMouseWheeled(d)
 		end
-		timer.Simple(15, function()
+		timer.Simple(1, function()
 			for k,v in pairs(LUABEE.CatalogedFunctions) do
 				local Canvas = vgui.Create("DPanelList", LUABEE.BlockSelector)
 				Canvas:EnableVerticalScrollbar(true)
@@ -276,6 +275,15 @@ hook.Add("Initialize", "LUABEE_INIT", function()
 			end
 		end)
 		
+	LUABEE.HorizontalDiv = vgui.Create("DHorizontalDivider", LUABEE.WINDOW)
+		LUABEE.HorizontalDiv:SetPos(2,44)
+		LUABEE.HorizontalDiv:SetSize(ScrW()-4,ScrH()-46)
+		LUABEE.HorizontalDiv:SetLeftWidth(300)
+		LUABEE.HorizontalDiv:SetLeft(LUABEE.BlockSelector)
+		LUABEE.HorizontalDiv:SetRight(LUABEE.Tabs)
+		LUABEE.HorizontalDiv:SetDividerWidth(4)
+		
+		
 	LUABEE.FunctionLookup = vgui.Create("DFrame")
 		LUABEE.FunctionLookup:SetSize(300,342)
 		LUABEE.FunctionLookup:Center()
@@ -304,7 +312,7 @@ hook.Add("Initialize", "LUABEE_INIT", function()
 						if k1 == "__Icon" then continue end
 						for k2,v2 in pairs(v1)do
 							if k2 == "__Color" then continue end
-							if string.match(v2.name, text) then
+							if string.match(string.lower(v2.name), string.lower(text)) then
 								local v3 = table.Copy(v2)
 								v3.category = k1
 								v3.type = k
@@ -504,24 +512,16 @@ hook.Add("Initialize", "LUABEE_INIT", function()
 		end
 	end
 	
-	timer.Simple(15, function()
-		concommand.Add("Luabee", function()
-			
-			LUABEE.WINDOW:SetVisible(true)
-			LUABEE.WINDOW:MakePopup()
-			
-		end)
-		chat.AddText(Color(20,230,20), "Loaded Luabee.")
-		print("--> LUABEE Initialized.")
-	end)
-	
 	concommand.Add("Luabee", function()
 		
-		chat.AddText(Color(230,20,20), "Luabee is loading. Please wait...")
+		chat.AddText(Color(230,20,20), "Luabee is updating. Please wait...")
 		
 	end)
 	
-
+	LUABEE.OpenWikiCache()
+	
+	print("--> LUABEE Initialized.")
+	
 	// Shortened, made iterable - Josh 'Acecool' Moser
 	// I'm unsure of your intention with this function, but I did a test and it performed identically for me with no limit of vars.
 	function LUABEE.GetValidArgs( ... )
@@ -539,6 +539,16 @@ hook.Add("Initialize", "LUABEE_INIT", function()
 		return unpack( _args );
 	end
 end)
+
+function LUABEE.PostInit()
+	concommand.Add("Luabee", function()
+	
+		LUABEE.WINDOW:SetVisible(true)
+		LUABEE.WINDOW:MakePopup()
+		
+	end)
+	-- chat.AddText(Color(20,230,20), "Luabee is loaded.")
+end
 
 function LUABEE.OpenJumpMenu()
 	local f = vgui.Create("DFrame", LUABEE.WINDOW)
@@ -680,7 +690,7 @@ function LUABEE.ExportThis()
 		end
 	else
 		local fb = vgui.Create("FileBrowser", LUABEE.WINDOW)
-			fb:SetDirectory("Data/Luabee/Saved Files")
+			fb:SetDirectory("Data/Luabee/Saved Files/Compiled Lua")
 			fb:Center()
 			fb:SetAction("Export", function(path,name)
 				LUABEE.SaveCompiledData(data, path.."/"..name)

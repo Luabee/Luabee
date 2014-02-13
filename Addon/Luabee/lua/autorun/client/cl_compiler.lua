@@ -33,10 +33,8 @@ hook.Add("Initialize", "Luabee Compile Init", function()
 			compile = string.Replace(compile, "%s, ", "_, ")
 			
 			compile = [[
---==================================LUABEE VARIABLES:====================================
-LUABEE = LUABEE or {}
-LUABEE.Vars = LUABEE.Vars or {}
-/*----------------------------------Legal Notices:---------------------------------------
+/*=======================================LUABEE==========================================
+-------------------------------------Legal Notices:--------------------------------------
 LUABEE is copyrighted (c) Bob Blackmon; alias Bobbleheadbob.
 All files created using LUABEE are property of their creators.
 LUABEE is open-source software. Feel free to modify, distribute, and reinvent.

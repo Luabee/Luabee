@@ -2,19 +2,24 @@ LUABEE.AddLibrary("vgui", Color(200,240,255))
 
 LUABEE.CatalogFunction({
 	name="vgui.Create",
-	args = {[1]="CName",[2]="PrtNil",[3]="NamNil"},
-	returns = {[1]="Pan"},
+	args = {[1]="class",[2]="parent",[3]="name"},
+	returns = {[1]="panel"},
 	realm = "Client",
-	desc=[[Creates a panel by the specified classname. Cname(classname) of the panel to create. 
-	PrtNil(parent=nil) is the parent of the created panel. NamNil(name=nil) the name of the created panel. Returns the panel(Pan)]]
+	desc=[[Creates a panel by the specified classname. 
+	[class] is the type of panel to create. 
+	[parent] is the parent of the created panel.
+	[name] the name of the created panel.
+	Returns the newly created panel, [panel] ]]
 },"vgui",_,_)
 LUABEE.CatalogFunction({
 	name="vgui.CreateFromTable",
-	args = {[1]="MtTbl",[2]="PrtNil",[3]="NamNil"},
-	returns = {[1]="CrPan"},
+	args = {[1]="type",[2]="Parent",[3]="Name"},
+	returns = {[1]="Pan"},
 	realm = "Client",
-	desc=[[Creates a panel from table. MtTbl(metatable) is your PANEL table,
-	PrtNil(parent=nil) parents your table to another one, NamNil(name=nil) is the name of the newly made table and it will return CrPan(the created panel)]]
+	desc=[[Creates a panel from table. [type] is your PANEL table,
+	[parent] parents your table to another one
+	[name] is the name of the newly made table
+	return [Pan] (the created panel)]]
 },"vgui",_,_)
 LUABEE.CatalogFunction({
 	name="vgui.CursorVisible",
