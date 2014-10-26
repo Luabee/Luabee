@@ -26,6 +26,28 @@ LUABEE.CatalogFunction({
 },_,_,_, "Console Functions")
 LUABEE.CatalogFunction({
 
+	name = "MsgC",
+	args = {"col","msg"},
+	returns = {},
+	realm = "Shared",
+	desc = [[Prints [msg] to the console.
+	The message will be colored to [col].
+	[msg] can be anything, not just a string.
+	If it isn't a string it will likely not be pretty.]],
+	
+},_,_,_, "Console Functions")
+LUABEE.CatalogFunction({
+
+	name = "RunString",
+	args = {"str"},
+	returns = {},
+	realm = "Shared",
+	desc = [[Runs a string [str] as raw Lua.
+	Good for inputting Lua directly into the file.]],
+	
+},_,_,_, "Console Functions")
+LUABEE.CatalogFunction({
+
 	name = "Msg",
 	args = {"msg"},
 	returns = {},

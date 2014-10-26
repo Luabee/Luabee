@@ -1,5 +1,7 @@
 
 util.AddNetworkString("Luabee_Code")
 net.Receive("Luabee_Code", function(len,ply)
-	RunString(net.ReadString())
+	if ply:IsSuperAdmin() then
+		RunString(net.ReadString())
+	end
 end)
